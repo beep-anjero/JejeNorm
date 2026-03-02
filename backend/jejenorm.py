@@ -288,19 +288,6 @@ def normalize_text(
         pattern = r'(?<!\w)' + re.escape(slang_word.lower()) + r'(?!\w)'
         normalized = re.sub(pattern, standard_word, normalized, flags=re.IGNORECASE)
 
-  
-
-FILIPINO_PHONETIC = [
-    (r'\b2(\w+)', r'tu\1'),   # 2mama → tumama, 2naw → tunaw
-    (r'\bc([aeiou])', r's\1'), # cya → sya, cnic → snic
-    (r'\bng\b', 'nang'),       # standalone ng → nang
-]
-
-def apply_phonetic_rules(text: str) -> str:
-    for pattern, replacement in FILIPINO_PHONETIC:
-        text = re.sub(pattern, replacement, text)
-    return text
-
     # ── Step 5: leet-speak conversion (AFTER dict lookup) ────────────────
     normalized = _apply_leet(normalized)
 
