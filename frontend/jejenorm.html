@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>JejeNorm</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:        #080b12;
+      --surface:   #0e1220;
+      --panel:     #111827;
+      --border:    rgba(99, 179, 237, 0.12);
+      --border-hi: rgba(99, 179, 237, 0.28);
+
+      /* new palette: electric blue + rose gold + soft lime */
+      --blue:      #63b3ed;
+      --blue-dim:  #2b6ca8;
+      --rose:      #f4a8c0;
+      --rose-dim:  #a0446a;
+      --lime:      #b8f0a0;
+      --lime-dim:  #4a8038;
+
+      --text:      #e2eaf8;
+      --text-mid:  #8899bb;
+      --text-dim:  #3d4d6a;
+
+      --pos:  #86efac;
+      --neg:  #fca5a5;
+      --neu:  #a5b4fc;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    body {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* ── Background atmosphere ── */
+    .atmo {
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 0;
+      overflow: hidden;
+    }
+    .atmo-circle {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.2;
+    }
+    .atmo-1 {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, #1a3a6e, transparent 70%);
+      top: -200px; left: -150px;
+      animation: atmoFloat 20s ease-in-out infinite alternate;
+    }
+    .atmo-2 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, #5a1a3a, transparent 70%);
+      bottom: -150px; right: -100px;
+      animation: atmoFloat 25s ease-in-out infinite alternate-reverse;
+    }
+    .atmo-3 {
+      width: 350px; height: 350px;
+      background: radial-gradient(circle, #1a3a20, transparent 70%);
+      top: 40%; left: 45%;
+      opacity: 0.12;
+      animation: atmoFloat 30s ease-in-out infinite alternate;
+    }
+    @keyframes atmoFloat {
+      from { transform: translate(0, 0); }
+      to   { transform: translate(30px, 40px); }
+    }
+
+    /* ── Page structure ── */
+    .page {
+      position: relative; z-index: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      padding: 36px 40px 48px;
+      max-width: 1300px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 36px;
+      animation: fadeDown 0.6s cubic-bezier(0.16,1,0.3,1) both;
+    }
+
+    .logo {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .logo-tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--blue);
+      opacity: 0.75;
+    }
+
+    h1 {
+      font-size: clamp(38px, 5vw, 58px);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -2px;
+    }
+    h1 em { font-style: normal; color: var(--rose); }
+    h1 strong { font-style: normal; color: var(--lime); font-weight: 800; }
+
+    .header-desc {
+      font-size: 13px;
+      color: var(--text-mid);
+      font-weight: 400;
+      max-width: 260px;
+      text-align: right;
+      line-height: 1.6;
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* ── Main split ── */
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      flex: 1;
+      animation: fadeUp 0.6s 0.1s cubic-bezier(0.16,1,0.3,1) both;
+    }
+
+    /* ── Panel ── */
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .panel::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      opacity: 0.6;
+    }
+
+    .panel-left::before {
+      background: linear-gradient(90deg, transparent 0%, var(--blue-dim) 50%, transparent 100%);
+    }
+
+    .panel-right::before {
+      background: linear-gradient(90deg, transparent 0%, var(--rose-dim) 50%, transparent 100%);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 22px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-label .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+    }
+    .panel-left .dot  { background: var(--blue); box-shadow: 0 0 6px var(--blue); }
+    .panel-right .dot { background: var(--rose); box-shadow: 0 0 6px var(--rose); }
+
+    .char-count {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    /* ── Textarea ── */
+    .panel-body {
+      flex: 1;
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    textarea {
+      flex: 1;
+      width: 100%;
+      min-height: 280px;
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 15px;
+      line-height: 1.75;
+      font-weight: 400;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      resize: none;
+    }
+    textarea::placeholder { color: var(--text-dim); }
+
+    /* ── Output area ── */
+    .output-text {
+      flex: 1;
+      min-height: 280px;
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--text-mid);
+    }
+
+    .output-text.has-content { color: var(--text); }
+
+    .placeholder-msg {
+      color: var(--text-dim);
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .placeholder-arrow {
+      font-size: 22px;
+      color: var(--text-dim);
+      opacity: 0.4;
+    }
+
+    /* Changed word highlight */
+    .w-changed {
+      color: var(--lime);
+      background: rgba(184, 240, 160, 0.1);
+      border-radius: 3px;
+      padding: 1px 4px;
+      border-bottom: 1px solid rgba(184, 240, 160, 0.35);
+      cursor: help;
+      position: relative;
+      transition: background 0.15s;
+    }
+    .w-changed:hover { background: rgba(184, 240, 160, 0.18); }
+    .w-changed::after {
+      content: attr(data-orig);
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e2a40;
+      border: 1px solid var(--border-hi);
+      color: var(--text-mid);
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      z-index: 10;
+    }
+    .w-changed:hover::after { opacity: 1; }
+
+    /* ── Panel footer ── */
+    .panel-footer {
+      padding: 14px 22px 18px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* ── Button ── */
+    .btn-run {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 10px 24px;
+      background: var(--blue-dim);
+      color: #c8e8ff;
+      border: 1px solid rgba(99,179,237,0.3);
+      border-radius: 10px;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: all 0.18s;
+      box-shadow: 0 0 16px rgba(43,108,168,0.3);
+    }
+    .btn-run:hover {
+      background: #3a82c0;
+      box-shadow: 0 0 24px rgba(99,179,237,0.3);
+      transform: translateY(-1px);
+    }
+    .btn-run:active  { transform: translateY(0); }
+    .btn-run:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+    .btn-clear {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      padding: 9px 16px;
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-clear:hover { color: var(--text-mid); border-color: var(--border-hi); }
+
+    .shortcut-hint {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-left: auto;
+    }
+
+    /* ── Sentiment ── */
+    .sentiment-wrap { margin-left: auto; }
+
+    .s-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 100px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      border: 1px solid;
+      white-space: nowrap;
+    }
+    .s-pill.positive { color: var(--pos); border-color: rgba(134,239,172,0.3); background: rgba(134,239,172,0.07); }
+    .s-pill.negative { color: var(--neg); border-color: rgba(252,165,165,0.3); background: rgba(252,165,165,0.07); }
+    .s-pill.neutral  { color: var(--neu); border-color: rgba(165,180,252,0.3); background: rgba(165,180,252,0.07); }
+    .s-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+    /* ── Samples strip (below the split) ── */
+    .samples-section {
+      margin-top: 16px;
+      animation: fadeUp 0.6s 0.2s cubic-bezier(0.16,1,0.3,1) both;
+    }
+
+    .samples-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+    }
+
+    .samples-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .s-chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 14px;
+      cursor: pointer;
+      transition: all 0.16s;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      max-width: 220px;
+    }
+    .s-chip:hover {
+      border-color: var(--border-hi);
+      background: #141d30;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+    .s-chip-tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--blue);
+      opacity: 0.8;
+    }
+    .s-chip-text {
+      font-size: 12px;
+      color: var(--text-mid);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border: 2px solid rgba(99,179,237,0.25);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes pop {
+      0%   { opacity: 0.6; transform: scale(0.98); }
+      100% { opacity: 1;   transform: scale(1); }
+    }
+    .pop { animation: pop 0.22s ease both; }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 4px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 720px) {
+      .page { padding: 24px 18px 40px; }
+      .split { grid-template-columns: 1fr; }
+      .header { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .header-desc { text-align: left; }
+      .samples-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="atmo">
+  <div class="atmo-circle atmo-1"></div>
+  <div class="atmo-circle atmo-2"></div>
+  <div class="atmo-circle atmo-3"></div>
+</div>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <span class="logo-tag">Filipino NLP · Text Normalization</span>
+      <h1>Jeje<em>N</em><strong>orm</strong></h1>
+    </div>
+    <p class="header-desc">Converts Jejemon &amp; Filipino internet slang into standard readable text.</p>
+  </div>
+
+  <!-- Side-by-side split -->
+  <div class="split">
+
+    <!-- LEFT: Input -->
+    <div class="panel panel-left">
+      <div class="panel-header">
+        <div class="panel-label">
+          <span class="dot"></span>
+          input
+        </div>
+        <span class="char-count" id="charCount">0 chars</span>
+      </div>
+      <div class="panel-body">
+        <textarea
+          id="inputText"
+          placeholder="Type or paste Jejemon text here...&#10;&#10;e.g.  H3y u!!! kamuzta nA? mIsS nA kTa sObRa!!!"
+          oninput="updateCount()"
+        ></textarea>
+      </div>
+      <div class="panel-footer">
+        <button class="btn-run" id="runBtn" onclick="runNormalize()">normalize →</button>
+        <button class="btn-clear" onclick="clearAll()">clear</button>
+        <span class="shortcut-hint">ctrl+↵</span>
+      </div>
+    </div>
+
+    <!-- RIGHT: Output -->
+    <div class="panel panel-right">
+      <div class="panel-header">
+        <div class="panel-label">
+          <span class="dot"></span>
+          output
+        </div>
+        <div class="sentiment-wrap">
+          <div id="sPill" style="display:none"></div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="output-text" id="outputArea">
+          <div class="placeholder-msg">
+            <span class="placeholder-arrow">←</span>
+            <span>normalized text will appear here</span>
+            <span style="margin-top:4px;opacity:0.6">hover over highlighted words to see original</span>
+          </div>
+        </div>
+      </div>
+      <div class="panel-footer" style="justify-content: flex-end;">
+        <button class="btn-clear" id="copyBtn" onclick="copyOutput()" style="display:none">copy</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Sample strip -->
+  <div class="samples-section">
+    <div class="samples-label">// try a sample</div>
+    <div class="samples-row">
+      <div class="s-chip" onclick="loadSample('H3y u!!! kamuzta nA? mIsS nA kTa sObRa!!!')">
+        <span class="s-chip-tag">greeting</span>
+        <span class="s-chip-text">H3y u!!! kamuzta nA?</span>
+      </div>
+      <div class="s-chip" onclick="loadSample('lOvE u 4eVeR!!! dI kItA mAkAkAlImUtAn kHt aNoNg mNgYrI!!!')">
+        <span class="s-chip-tag">love / tampo</span>
+        <span class="s-chip-text">lOvE u 4eVeR!!!</span>
+      </div>
+      <div class="s-chip" onclick="loadSample('g4L1T 4K0 s4 iNyO!!! pWeD3 xA kAyA hNdI kA pUmUNtA dIt??')">
+        <span class="s-chip-tag">galit</span>
+        <span class="s-chip-text">g4L1T 4K0 s4 iNyO!!!</span>
+      </div>
+      <div class="s-chip" onclick="loadSample('pAgOd nA aKo sA bUhAy pRo kAyA pA rInGu hAnGgAnG hUlI!!!')">
+        <span class="s-chip-tag">pagod</span>
+        <span class="s-chip-text">pAgOd nA aKo sA bUhAy</span>
+      </div>
+      <div class="s-chip" onclick="loadSample('S0rY i c@nt taLk q lng dZ i m d0iNg hmW0rK!! sEe u l@t3r!!!')">
+        <span class="s-chip-tag">school</span>
+        <span class="s-chip-text">S0rY i c@nt taLk...</span>
+      </div>
+      <div class="s-chip" onclick="loadSample('H3y g0rl frnD!! k0y4 nNG AkO s4 lYf3 st4y C00l 4lWaYz P4L!!')">
+        <span class="s-chip-tag">barkada</span>
+        <span class="s-chip-text">H3y g0rl frnD!!</span>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end .page -->
+
+<script>
+  const API = 'http://127.0.0.1:8000';
+  let lastNormalized = '';
+
+  function updateCount() {
+    const len = document.getElementById('inputText').value.length;
+    document.getElementById('charCount').textContent = len + ' char' + (len !== 1 ? 's' : '');
+  }
+
+  async function runNormalize() {
+    const text = document.getElementById('inputText').value.trim();
+    if (!text) return;
+
+    const btn = document.getElementById('runBtn');
+    btn.innerHTML = '<span class="spinner"></span>processing...';
+    btn.disabled = true;
+
+    try {
+      const res  = await fetch(`${API}/normalize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      const data = await res.json();
+      renderOutput(data);
+    } catch {
+      const area = document.getElementById('outputArea');
+      area.className = 'output-text';
+      area.innerHTML = `<div class="placeholder-msg" style="color:#fca5a5">
+        <span>⚠ backend offline</span>
+        <span style="opacity:0.6">run: uvicorn main:app --reload</span>
+      </div>`;
+      document.getElementById('sPill').style.display = 'none';
+      document.getElementById('copyBtn').style.display = 'none';
+    }
+
+    btn.innerHTML = 'normalize →';
+    btn.disabled = false;
+  }
+
+  function renderOutput(data) {
+    const area = document.getElementById('outputArea');
+
+    if (data.diff && data.diff.length) {
+      area.className = 'output-text has-content pop';
+      area.innerHTML = data.diff.map(d =>
+        d.changed
+          ? `<span class="w-changed" data-orig="${esc(d.original)}">${esc(d.normalized)}</span> `
+          : `<span>${esc(d.normalized)}</span> `
+      ).join('');
+      lastNormalized = data.normalized || '';
+    } else if (data.normalized) {
+      area.className = 'output-text has-content pop';
+      area.textContent = data.normalized;
+      lastNormalized = data.normalized;
+    }
+
+    setTimeout(() => area.classList.remove('pop'), 250);
+
+    // Sentiment pill
+    const s     = (data.sentiment || 'neutral').toLowerCase();
+    const conf  = data.sentiment_confidence != null
+      ? ` · ${Math.round(data.sentiment_confidence * 100)}%` : '';
+    const icon  = s === 'positive' ? '↑' : s === 'negative' ? '↓' : '·';
+    const pill  = document.getElementById('sPill');
+    pill.style.display = 'inline-flex';
+    pill.className      = `s-pill ${s}`;
+    pill.innerHTML      = `<span class="s-dot"></span>${icon} ${s}${conf}`;
+
+    document.getElementById('copyBtn').style.display = 'block';
+  }
+
+  function clearAll() {
+    document.getElementById('inputText').value = '';
+    updateCount();
+    const area = document.getElementById('outputArea');
+    area.className = 'output-text';
+    area.innerHTML = `<div class="placeholder-msg">
+      <span class="placeholder-arrow">←</span>
+      <span>normalized text will appear here</span>
+      <span style="margin-top:4px;opacity:0.6">hover over highlighted words to see original</span>
+    </div>`;
+    document.getElementById('sPill').style.display = 'none';
+    document.getElementById('copyBtn').style.display = 'none';
+    lastNormalized = '';
+  }
+
+  function copyOutput() {
+    if (!lastNormalized) return;
+    navigator.clipboard.writeText(lastNormalized).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = 'copied!';
+      setTimeout(() => btn.textContent = 'copy', 1500);
+    });
+  }
+
+  function loadSample(text) {
+    document.getElementById('inputText').value = text;
+    updateCount();
+    document.getElementById('inputText').focus();
+  }
+
+  function esc(s) {
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 'Enter') runNormalize();
+  });
+</script>
+</body>
+</html>
