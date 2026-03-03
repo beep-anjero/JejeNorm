@@ -1,6 +1,27 @@
 import re
+import pickle
+import os
 from difflib import get_close_matches
 from typing import Dict, List, Optional, Tuple
+
+import spacy
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, accuracy_score
+import pandas as pd
+import numpy as np
+
+# ─────────────────────────────────────────────
+#  LOAD SPACY MODEL
+# ─────────────────────────────────────────────
+try:
+    nlp = spacy.load("en_core_web_sm")
+except OSError:
+    import subprocess
+    subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
+    nlp = spacy.load("en_core_web_sm")
 
 
 # ─────────────────────────────────────────────
@@ -23,11 +44,6 @@ def load_dataset() -> Dict[str, str]:
     """
     Load the Filipino slang / Jejemon normalization dictionary.
     Returns a dict mapping slang/abbreviated form → standard form.
-
-    FIX: Removed duplicate keys, removed ambiguous single-letter entries
-         (c, r, z, v, b, m, d, n) that caused false replacements in normal text,
-         and removed raw number-only entries (0,1,3,4…) since those are now
-         handled exclusively by the leet-speak conversion step AFTER dict lookup.
     """
     print("Loading Filipino slang normalization dictionary...")
     return _build_rules()
@@ -43,10 +59,9 @@ def _build_rules() -> Dict[str, str]:
         'luv':      'love',
         'luve':     'love',
         'lv':       'love',
-        'q':        'ko',        # Filipino slang: 'q' = 'ko'
+        'q':        'ko',
 
         # ── Numbers used as words ─────────────────────────────────────────
-        # (standalone, whole-word only)
         '2':        'to',
         '4':        'for',
         '4ever':    'forever',
@@ -100,14 +115,14 @@ def _build_rules() -> Dict[str, str]:
         # ── Filipino particles ────────────────────────────────────────────
         'poe':      'po',
         'nalang':   'na lang',
-        'nng':      'nang',         # lowercase of nNG
+        'nng':      'nang',
 
         # ── Jejemon spelling variants → standard Filipino ─────────────────
-        'dIt':      'dito',         # case-folded below anyway
+        'dIt':      'dito',
         'kta':      'kita',
         'tyo':      'tayo',
         'kht':      'kahit',
-        'pRo':      'pero',         # case-folded; kept for clarity
+        'pRo':      'pero',
         'pro':      'pero',
         'mngyri':   'mangyari',
         'mngyare':  'mangyari',
@@ -116,7 +131,7 @@ def _build_rules() -> Dict[str, str]:
         'dhil':     'dahil',
         'dh2':      'dati',
         'lng':      'lang',
-        'nmn':      'naman',        # FIX: 'nmn' → 'naman' (not 'nalang')
+        'nmn':      'naman',
         'ulet':     'ulit',
 
         # ── Jejemon word variants ─────────────────────────────────────────
@@ -166,7 +181,7 @@ def _build_rules() -> Dict[str, str]:
         # ── Greetings ─────────────────────────────────────────────────────
         'hii':      'hi',
         'h3y':      'hey',
-        'eow':      'hello',        # classic Jejemon greeting
+        'eow':      'hello',
         'ellow':    'hello',
         'kamuzta':  'kamusta',
         'kamustah': 'kamusta',
@@ -191,7 +206,6 @@ def _build_rules() -> Dict[str, str]:
 #  VOCABULARY for fuzzy matching
 # ─────────────────────────────────────────────
 STANDARD_VOCABULARY = {
-    # Common Filipino words
     'ako', 'ikaw', 'siya', 'kami', 'kayo', 'sila', 'tayo',
     'ko', 'mo', 'niya', 'namin', 'ninyo', 'nila',
     'ang', 'ng', 'sa', 'at', 'na', 'ay', 'pa', 'din', 'rin',
@@ -211,7 +225,6 @@ STANDARD_VOCABULARY = {
     'kwento', 'usap', 'tawag', 'sulat', 'sagot', 'tanong',
     'ulit', 'lagi', 'minsan', 'palagi', 'dati', 'ngayon', 'mamaya',
     'hanggang', 'mula', 'simula', 'wakas', 'huli',
-    # Common English words used in Filipino internet text
     'love', 'hate', 'happy', 'sad', 'angry', 'tired',
     'friend', 'girl', 'boy', 'school', 'homework',
     'please', 'thanks', 'sorry', 'hello', 'bye',
@@ -221,11 +234,7 @@ STANDARD_VOCABULARY = {
 
 
 def _fuzzy_correct_word(word: str, vocabulary: set = STANDARD_VOCABULARY, cutoff: float = 0.75) -> str:
-    """
-    Use edit-distance (difflib) to find the closest standard word.
-    Returns the original word if no close match is found.
-    Only attempts correction on words of length >= 3 to avoid mangling particles.
-    """
+    """Use edit-distance (difflib) to find the closest standard word."""
     if len(word) < 3:
         return word
     matches = get_close_matches(word, vocabulary, n=1, cutoff=cutoff)
@@ -240,13 +249,298 @@ def _apply_leet(text: str) -> str:
 
 
 def _deduplicate_chars(text: str) -> str:
-    """
-    Collapse 3+ repeated characters to 2.
-    e.g. 'sobrrrraaaa' → 'sobrra', 'hahahahaha' kept as-is (alternating)
-    Specifically collapses runs: 'pleeeease' → 'pleease'
-    """
+    """Collapse 3+ repeated characters to 2."""
     return re.sub(r'(.)\1{2,}', r'\1\1', text)
 
+
+# ─────────────────────────────────────────────
+#  SPACY NLP PIPELINE
+# ─────────────────────────────────────────────
+
+def spacy_pipeline(text: str) -> str:
+    """
+    Apply SpaCy NLP pipeline to text:
+    1. Tokenization
+    2. Lemmatization
+    3. Stop word removal
+    4. Keep only NOUN and PROPN tokens (POS filtering)
+
+    Returns a cleaned string of lemmatized content words.
+    """
+    doc = nlp(text)
+    # Tokenize + lemmatize + remove stop words + filter by POS (NOUN, PROPN)
+    tokens = [
+        token.lemma_
+        for token in doc
+        if not token.is_stop and token.pos_ in ['NOUN', 'PROPN', 'VERB', 'ADJ']
+    ]
+    return ' '.join(tokens)
+
+
+def lower_replace(series: pd.Series) -> pd.Series:
+    """
+    Clean and normalize a Pandas Series of text:
+    - Lowercase
+    - Remove text inside brackets
+    - Remove punctuation and special characters
+    (Follows the text preprocessing lesson)
+    """
+    output = series.str.lower()
+    output = output.str.replace(r'\[.*?\]', '', regex=True)
+    output = output.str.replace(r'[^\w\s]', '', regex=True)
+    return output
+
+
+def token_lemma_nonstop(text: str) -> str:
+    """
+    Tokenize, lemmatize, and remove stop words from text using SpaCy.
+    (Follows the SpaCy lesson)
+    """
+    doc = nlp(text)
+    output = [token.lemma_ for token in doc if not token.is_stop]
+    return ' '.join(output)
+
+
+def filter_pos(text: str, pos_list: list = ['NOUN', 'PROPN']) -> str:
+    """
+    Filter tokens by Part-of-Speech tag.
+    Default: keep only nouns and proper nouns.
+    (Follows the POS tagging lesson)
+    """
+    doc = nlp(text)
+    output = [token.text for token in doc if token.pos_ in pos_list]
+    return ' '.join(output)
+
+
+def nlp_pipeline(series: pd.Series) -> pd.Series:
+    """
+    Full NLP preprocessing pipeline applied to a Pandas Series:
+    1. Lowercase & clean text
+    2. Tokenize + lemmatize + remove stop words
+    3. Filter by POS
+    (Follows the pipeline lesson)
+    """
+    output = lower_replace(series)
+    output = output.apply(token_lemma_nonstop)
+    output = output.apply(filter_pos)
+    return output
+
+
+# ─────────────────────────────────────────────
+#  LABELED DATASET FOR ML TRAINING
+# ─────────────────────────────────────────────
+
+LABELED_DATA = [
+    # Positive
+    ("mahal kita sobra", "positive"),
+    ("so happy today grabe ang saya", "positive"),
+    ("love you forever friend", "positive"),
+    ("ang ganda naman nito", "positive"),
+    ("thank you so much salamat talaga", "positive"),
+    ("best day ever so fun", "positive"),
+    ("congrats grabe ang galing mo", "positive"),
+    ("ang sweet naman niya", "positive"),
+    ("happy birthday sana masaya ka", "positive"),
+    ("love this so much ang cute", "positive"),
+    ("amazing ang galing talaga", "positive"),
+    ("so proud of you kaibigan", "positive"),
+    ("beautiful place maganda talaga", "positive"),
+    ("excited na sobra", "positive"),
+    ("thank you always love you", "positive"),
+    ("wonderful day with family", "positive"),
+    ("great job lagi kang magaling", "positive"),
+    ("smile always kasi maganda ka", "positive"),
+    ("so blessed thankful talaga", "positive"),
+    ("yay ganda ng balita", "positive"),
+    ("I love you so much", "positive"),
+    ("feeling happy today", "positive"),
+    ("so excited for tomorrow", "positive"),
+    ("you are the best friend", "positive"),
+    ("life is beautiful and good", "positive"),
+    ("i am so grateful today", "positive"),
+    ("this is so wonderful", "positive"),
+    ("you did amazing work today", "positive"),
+    ("feeling blessed and happy", "positive"),
+    ("great news today so happy", "positive"),
+
+    # Negative
+    ("galit na ako sa kanya", "negative"),
+    ("ang pangit naman nito", "negative"),
+    ("hate this so much", "negative"),
+    ("sobrang sakit ng loob ko", "negative"),
+    ("hindi ko na kaya", "negative"),
+    ("disappointed sa nangyari", "negative"),
+    ("ang sama naman niya", "negative"),
+    ("toxic na tao yan", "negative"),
+    ("ayoko na sobra na", "negative"),
+    ("nakakainis talaga siya", "negative"),
+    ("feel ko na bobo ako", "negative"),
+    ("terrible day grabe ang pangit", "negative"),
+    ("sad ako ngayon", "negative"),
+    ("angry na talaga ako", "negative"),
+    ("worst day ever", "negative"),
+    ("so tired and exhausted na", "negative"),
+    ("broken na ang puso ko", "negative"),
+    ("stressed grabe na ang pagod", "negative"),
+    ("depressed at sad ngayon", "negative"),
+    ("fail na naman ako", "negative"),
+    ("I hate this so much", "negative"),
+    ("feeling so sad today", "negative"),
+    ("this is terrible and bad", "negative"),
+    ("so angry right now", "negative"),
+    ("worst experience ever", "negative"),
+    ("i am so tired and done", "negative"),
+    ("this is so disappointing", "negative"),
+    ("feeling broken and lost", "negative"),
+    ("so stressed and exhausted", "negative"),
+    ("bad day everything went wrong", "negative"),
+
+    # Neutral
+    ("kumain na ako kanina", "neutral"),
+    ("pupunta ako bukas sa school", "neutral"),
+    ("may pasok ba bukas", "neutral"),
+    ("anong oras na", "neutral"),
+    ("nasa bahay ako ngayon", "neutral"),
+    ("mag-aaral muna ako", "neutral"),
+    ("pababa na ako", "neutral"),
+    ("saan ka pupunta bukas", "neutral"),
+    ("ano ang schedule mo", "neutral"),
+    ("natulog na ba siya", "neutral"),
+    ("going to school now", "neutral"),
+    ("just ate lunch today", "neutral"),
+    ("what time is it na", "neutral"),
+    ("i am at home now", "neutral"),
+    ("going to sleep na", "neutral"),
+    ("what is the schedule today", "neutral"),
+    ("send me the file please", "neutral"),
+    ("ok noted will do", "neutral"),
+    ("see you later today", "neutral"),
+    ("message me when you arrive", "neutral"),
+    ("I am going to school", "neutral"),
+    ("just finished eating dinner", "neutral"),
+    ("what time does it start", "neutral"),
+    ("i will be there later", "neutral"),
+    ("ok i understand thank you", "neutral"),
+    ("please send me the details", "neutral"),
+    ("noted will reply soon", "neutral"),
+    ("on my way now", "neutral"),
+    ("will call you later today", "neutral"),
+    ("just woke up now", "neutral"),
+]
+
+
+# ─────────────────────────────────────────────
+#  ML SENTIMENT CLASSIFIER
+# ─────────────────────────────────────────────
+
+PICKLE_PATH = "sentiment_model.pkl"
+
+
+def build_and_train_classifier():
+    """
+    Build and train Naive Bayes and Logistic Regression classifiers
+    using TF-IDF vectorization on the labeled dataset.
+    Saves the trained models as pickle files.
+    (Follows the Naive Bayes + Logistic Regression lesson)
+    """
+    print("Building sentiment classifier...")
+
+    # Create DataFrame from labeled data (follows lesson structure)
+    df = pd.DataFrame(LABELED_DATA, columns=["text", "sentiment"])
+
+    # Apply NLP pipeline: lowercase + clean
+    df["text_clean"] = lower_replace(df["text"])
+    df["text_clean"] = df["text_clean"].apply(token_lemma_nonstop)
+
+    # TF-IDF Vectorization (follows lesson)
+    tv = TfidfVectorizer(ngram_range=(1, 2), min_df=1)
+    X = tv.fit_transform(df["text_clean"])
+    y = df["sentiment"]
+
+    # View features as DataFrame (follows lesson)
+    X_df = pd.DataFrame(X.toarray(), columns=tv.get_feature_names_out())
+
+    # Train/test split (follows lesson)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_df, y, test_size=0.2, random_state=42
+    )
+
+    # Naive Bayes model (follows lesson)
+    model_nb = MultinomialNB()
+    model_nb.fit(X_train, y_train)
+    y_pred_nb = model_nb.predict(X_test)
+
+    # Logistic Regression model (follows lesson)
+    model_lr = LogisticRegression(max_iter=1000)
+    model_lr.fit(X_train, y_train)
+    y_pred_lr = model_lr.predict(X_test)
+
+    # Print evaluation reports (follows lesson)
+    print("\n=== Naive Bayes Results ===")
+    print(classification_report(y_test, y_pred_nb))
+    print(f"Accuracy: {accuracy_score(y_test, y_pred_nb):.4f}")
+
+    print("\n=== Logistic Regression Results ===")
+    print(classification_report(y_test, y_pred_lr))
+    print(f"Accuracy: {accuracy_score(y_test, y_pred_lr):.4f}")
+
+    # Save as pickle file (follows lesson)
+    model_data = {
+        "vectorizer": tv,
+        "model_nb": model_nb,
+        "model_lr": model_lr,
+        "X_df_columns": list(tv.get_feature_names_out()),
+    }
+    pd.to_pickle(model_data, PICKLE_PATH)
+    print(f"\nModels saved to {PICKLE_PATH}")
+
+    return model_data
+
+
+def load_or_train_classifier():
+    """Load classifier from pickle if it exists, otherwise train and save it."""
+    if os.path.exists(PICKLE_PATH):
+        print("Loading saved sentiment model...")
+        return pd.read_pickle(PICKLE_PATH)
+    else:
+        return build_and_train_classifier()
+
+
+# Load classifier at module startup
+_model_data = load_or_train_classifier()
+
+
+def detect_sentiment_ml(text: str) -> Tuple[str, float]:
+    """
+    Detect sentiment using the trained Naive Bayes classifier with TF-IDF.
+    Uses the full NLP pipeline: lowercase → clean → lemmatize → vectorize → predict.
+
+    Returns:
+        label (str)        – 'positive', 'negative', or 'neutral'
+        confidence (float) – probability of predicted class (0.0–1.0)
+    """
+    tv = _model_data["vectorizer"]
+    model_nb = _model_data["model_nb"]
+
+    # Apply same preprocessing as training
+    clean = text.lower()
+    clean = re.sub(r'\[.*?\]', '', clean)
+    clean = re.sub(r'[^\w\s]', '', clean)
+    doc = nlp(clean)
+    clean = ' '.join([token.lemma_ for token in doc if not token.is_stop])
+
+    # Vectorize and predict
+    X = tv.transform([clean])
+    label = model_nb.predict(X)[0]
+    proba = model_nb.predict_proba(X)[0]
+    confidence = round(float(max(proba)), 2)
+
+    return label, confidence
+
+
+# ─────────────────────────────────────────────
+#  JEJEMON NORMALIZATION PIPELINE
+# ─────────────────────────────────────────────
 
 def normalize_text(
     text: str,
@@ -258,11 +552,11 @@ def normalize_text(
 
     Pipeline (in order):
       1. Lowercase
-      2. Remove excessive punctuation clusters (!!!!! → !)
-      3. Deduplicate repeated characters (sobraaaa → sobraa)
-      4. Dictionary lookup  ← slang forms with numbers/symbols looked up HERE
-      5. Leet-speak conversion  ← numbers/symbols replaced AFTER dict lookup
-      6. Fuzzy correction for unknown words (optional)
+      2. Remove excessive punctuation clusters
+      3. Deduplicate repeated characters
+      4. Dictionary lookup
+      5. Leet-speak conversion
+      6. Fuzzy correction
       7. Clean up whitespace
 
     Returns:
@@ -272,31 +566,21 @@ def normalize_text(
     if ngram_rules is None:
         ngram_rules = load_dataset()
 
-    # ── Step 1: lowercase ────────────────────────────────────────────────
     normalized = text.lower()
-
-    # ── Step 2: collapse punctuation runs ────────────────────────────────
     normalized = re.sub(r'([!?.,])\1+', r'\1', normalized)
-
-    # ── Step 3: deduplicate characters ───────────────────────────────────
     normalized = _deduplicate_chars(normalized)
 
-    # ── Step 4: dictionary lookup (BEFORE leet conversion) ───────────────
-    # Sort by length descending so multi-word phrases match before single words
     sorted_rules = sorted(ngram_rules.items(), key=lambda x: len(x[0]), reverse=True)
     for slang_word, standard_word in sorted_rules:
         pattern = r'(?<!\w)' + re.escape(slang_word.lower()) + r'(?!\w)'
         normalized = re.sub(pattern, standard_word, normalized, flags=re.IGNORECASE)
 
-    # ── Step 5: leet-speak conversion (AFTER dict lookup) ────────────────
     normalized = _apply_leet(normalized)
 
-    # ── Step 6: fuzzy correction for remaining unknown-looking tokens ─────
     if use_fuzzy:
         tokens = normalized.split()
         corrected_tokens = []
         for token in tokens:
-            # Strip punctuation for lookup, reattach afterward
             stripped = token.strip(r"""!?.,;:'"()[]""")
             suffix = token[len(stripped):]
             prefix_len = len(token) - len(token.lstrip(r"""!?.,;:'"()[]"""))
@@ -310,10 +594,8 @@ def normalize_text(
                 corrected_tokens.append(token)
         normalized = ' '.join(corrected_tokens)
 
-    # ── Step 7: clean up whitespace ──────────────────────────────────────
     normalized = re.sub(r'\s+', ' ', normalized).strip()
 
-    # ── Build word-level diff for the API response ────────────────────────
     original_words = re.findall(r'\S+', text.lower())
     normalized_words = re.findall(r'\S+', normalized)
     diff = _build_diff(original_words, normalized_words)
@@ -322,10 +604,7 @@ def normalize_text(
 
 
 def _build_diff(original_words: List[str], normalized_words: List[str]) -> List[dict]:
-    """
-    Produce a simple word-level diff showing what changed.
-    Pairs words positionally; marks each as 'changed' or 'unchanged'.
-    """
+    """Produce a simple word-level diff showing what changed."""
     diff = []
     max_len = max(len(original_words), len(normalized_words))
     for i in range(max_len):
@@ -340,7 +619,7 @@ def _build_diff(original_words: List[str], normalized_words: List[str]) -> List[
 
 
 # ─────────────────────────────────────────────
-#  SENTIMENT DETECTION
+#  RULE-BASED SENTIMENT (fallback)
 # ─────────────────────────────────────────────
 
 POSITIVE_WORDS = {
@@ -359,40 +638,36 @@ NEGATIVE_WORDS = {
     'poor', 'fail', 'failed', 'sick', 'tired', 'exhausted', 'depressed',
     'broken', 'wrong', 'toxic', 'useless', 'worthless', 'disgusting',
     'galit', 'nakakainis', 'hayop', 'gago', 'bobo', 'tanga',
-    # Leet-speak negatives (checked before leet conversion on raw input)
     'h8', 'sux', 'h4te',
 }
 
-# Negation words that flip the next sentiment word
 NEGATION_WORDS = {'hindi', 'di', 'not', "don't", 'wala', 'ayaw', 'never'}
 
 
 def detect_sentiment(text: str) -> Tuple[str, float]:
     """
-    Detect sentiment of the ORIGINAL (pre-normalization) text.
-
-    FIX 1: Added neutral category when no sentiment words are found.
-    FIX 2: Added basic negation handling (e.g. 'hindi masaya' → negative signal).
-    FIX 3: Returns a confidence score (0.0–1.0) alongside the label.
-
-    Returns:
-        label (str)       – 'positive', 'negative', or 'neutral'
-        confidence (float) – how confident the model is (0.0–1.0)
+    Detect sentiment using ML classifier (Naive Bayes + TF-IDF).
+    Falls back to rule-based if ML fails.
     """
-    words = re.findall(r"\b\w[\w']*\b", text.lower())
+    try:
+        return detect_sentiment_ml(text)
+    except Exception:
+        return _detect_sentiment_rulebased(text)
 
+
+def _detect_sentiment_rulebased(text: str) -> Tuple[str, float]:
+    """Rule-based sentiment fallback."""
+    words = re.findall(r"\b\w[\w']*\b", text.lower())
     positive_score = 0
     negative_score = 0
 
     for i, word in enumerate(words):
         is_negated = i > 0 and words[i - 1] in NEGATION_WORDS
-
         if word in POSITIVE_WORDS:
             if is_negated:
                 negative_score += 1
             else:
                 positive_score += 1
-
         elif word in NEGATIVE_WORDS:
             if is_negated:
                 positive_score += 1
@@ -400,13 +675,10 @@ def detect_sentiment(text: str) -> Tuple[str, float]:
                 negative_score += 1
 
     total = positive_score + negative_score
-
-    # ── FIX: Neutral when no sentiment signal found ───────────────────────
     if total == 0:
         return 'neutral', 1.0
 
     confidence = round(max(positive_score, negative_score) / total, 2)
-
     if positive_score > negative_score:
         return 'positive', confidence
     elif negative_score > positive_score:
@@ -420,10 +692,7 @@ def detect_sentiment(text: str) -> Tuple[str, float]:
 # ─────────────────────────────────────────────
 
 def word_accuracy(predicted: str, reference: str) -> float:
-    """
-    Compute word-level accuracy between predicted and reference strings.
-    (% of word positions where prediction matches reference)
-    """
+    """Compute word-level accuracy between predicted and reference strings."""
     pred_words = predicted.lower().split()
     ref_words = reference.lower().split()
     if not ref_words:
@@ -437,10 +706,7 @@ def word_accuracy(predicted: str, reference: str) -> float:
 
 
 def normalization_rate(original: str, normalized: str) -> float:
-    """
-    Returns the proportion of words that were changed during normalization.
-    Useful as a diagnostic metric.
-    """
+    """Returns the proportion of words changed during normalization."""
     orig_words = original.lower().split()
     norm_words = normalized.lower().split()
     if not orig_words:
