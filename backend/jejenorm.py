@@ -258,17 +258,7 @@ def _deduplicate_chars(text: str) -> str:
 # ─────────────────────────────────────────────
 
 def spacy_pipeline(text: str) -> str:
-    """
-    Apply SpaCy NLP pipeline to text:
-    1. Tokenization
-    2. Lemmatization
-    3. Stop word removal
-    4. Keep only NOUN and PROPN tokens (POS filtering)
-
-    Returns a cleaned string of lemmatized content words.
-    """
     doc = nlp(text)
-    # Tokenize + lemmatize + remove stop words + filter by POS (NOUN, PROPN)
     tokens = [
         token.lemma_
         for token in doc
@@ -278,13 +268,6 @@ def spacy_pipeline(text: str) -> str:
 
 
 def lower_replace(series: pd.Series) -> pd.Series:
-    """
-    Clean and normalize a Pandas Series of text:
-    - Lowercase
-    - Remove text inside brackets
-    - Remove punctuation and special characters
-    (Follows the text preprocessing lesson)
-    """
     output = series.str.lower()
     output = output.str.replace(r'\[.*?\]', '', regex=True)
     output = output.str.replace(r'[^\w\s]', '', regex=True)
@@ -292,34 +275,19 @@ def lower_replace(series: pd.Series) -> pd.Series:
 
 
 def token_lemma_nonstop(text: str) -> str:
-    """
-    Tokenize, lemmatize, and remove stop words from text using SpaCy.
-    (Follows the SpaCy lesson)
-    """
     doc = nlp(text)
     output = [token.lemma_ for token in doc if not token.is_stop]
     return ' '.join(output)
 
 
 def filter_pos(text: str, pos_list: list = ['NOUN', 'PROPN']) -> str:
-    """
-    Filter tokens by Part-of-Speech tag.
-    Default: keep only nouns and proper nouns.
-    (Follows the POS tagging lesson)
-    """
     doc = nlp(text)
     output = [token.text for token in doc if token.pos_ in pos_list]
     return ' '.join(output)
 
 
 def nlp_pipeline(series: pd.Series) -> pd.Series:
-    """
-    Full NLP preprocessing pipeline applied to a Pandas Series:
-    1. Lowercase & clean text
-    2. Tokenize + lemmatize + remove stop words
-    3. Filter by POS
-    (Follows the pipeline lesson)
-    """
+   
     output = lower_replace(series)
     output = output.apply(token_lemma_nonstop)
     output = output.apply(filter_pos)
