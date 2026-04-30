@@ -18,10 +18,12 @@ import numpy as np
 # ─────────────────────────────────────────────
 try:
     nlp = spacy.load("en_core_web_sm")
-except OSError:
-    import subprocess
-    subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
-    nlp = spacy.load("en_core_web_sm")
+except OSError as exc:
+    raise RuntimeError(
+        "Missing SpaCy model 'en_core_web_sm'. Install it with: "
+        "python -m spacy download en_core_web_sm"
+    ) from exc
+
 
 
 # ─────────────────────────────────────────────
@@ -730,7 +732,9 @@ LABELED_DATA = [
 #  ML SENTIMENT CLASSIFIER
 # ─────────────────────────────────────────────
 
-PICKLE_PATH = "sentiment_model.pkl"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PICKLE_PATH = os.path.join(BASE_DIR, "sentiment_model.pkl")
+
 
 
 def build_and_train_classifier():
