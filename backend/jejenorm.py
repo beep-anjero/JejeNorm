@@ -738,41 +738,40 @@ def build_and_train_classifier():
     Build and train Naive Bayes and Logistic Regression classifiers
     using TF-IDF vectorization on the labeled dataset.
     Saves the trained models as pickle files.
-    (Follows the Naive Bayes + Logistic Regression lesson)
     """
     print("Building sentiment classifier...")
 
-    # Create DataFrame from labeled data (follows lesson structure)
+    # Create DataFrame from labeled data 
     df = pd.DataFrame(LABELED_DATA, columns=["text", "sentiment"])
 
     # Apply NLP pipeline: lowercase + clean
     df["text_clean"] = lower_replace(df["text"])
     df["text_clean"] = df["text_clean"].apply(token_lemma_nonstop)
 
-    # TF-IDF Vectorization (follows lesson)
+    # TF-IDF Vectorization
     tv = TfidfVectorizer(ngram_range=(1, 2), min_df=1)
     X = tv.fit_transform(df["text_clean"])
     y = df["sentiment"]
 
-    # View features as DataFrame (follows lesson)
+    # View features as DataFrame 
     X_df = pd.DataFrame(X.toarray(), columns=tv.get_feature_names_out())
 
-    # Train/test split (follows lesson)
+    # Train/test split 
     X_train, X_test, y_train, y_test = train_test_split(
         X_df, y, test_size=0.2, random_state=42
     )
 
-    # Naive Bayes model (follows lesson)
+    # Naive Bayes model
     model_nb = MultinomialNB()
     model_nb.fit(X_train, y_train)
     y_pred_nb = model_nb.predict(X_test)
 
-    # Logistic Regression model (follows lesson)
+    # Logistic Regression model 
     model_lr = LogisticRegression(max_iter=1000)
     model_lr.fit(X_train, y_train)
     y_pred_lr = model_lr.predict(X_test)
 
-    # Print evaluation reports (follows lesson)
+    # Print evaluation reports 
     print("\n=== Naive Bayes Results ===")
     print(classification_report(y_test, y_pred_nb))
     print(f"Accuracy: {accuracy_score(y_test, y_pred_nb):.4f}")
@@ -781,7 +780,7 @@ def build_and_train_classifier():
     print(classification_report(y_test, y_pred_lr))
     print(f"Accuracy: {accuracy_score(y_test, y_pred_lr):.4f}")
 
-    # Save as pickle file (follows lesson)
+    # Save as pickle file
     model_data = {
         "vectorizer": tv,
         "model_nb": model_nb,
