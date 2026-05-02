@@ -25,7 +25,6 @@ except OSError as exc:
     ) from exc
 
 
-
 # ─────────────────────────────────────────────
 #  LEET-SPEAK MAP  (applied AFTER dictionary)
 # ─────────────────────────────────────────────
@@ -736,7 +735,6 @@ LABELED_DATA = [
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PICKLE_PATH = os.path.join(BASE_DIR, "sentiment_model.pkl")
-
 
 
 def build_and_train_classifier():
