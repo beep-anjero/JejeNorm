@@ -1,143 +1,144 @@
 # JejeNorm
+
 ### An NLP-based Normalization System for Filipino Internet Slang and Jejemon Texts
 
----
+JejeNorm converts Filipino internet slang and Jejemon-style text into a more standard, readable form. It combines a manually curated normalization lexicon, leet-speak decoding, fuzzy matching, and a simple sentiment classifier behind a FastAPI backend and a vanilla HTML/CSS/JavaScript frontend.
 
 ## Overview
 
-JejeNorm is a natural language processing (NLP) system that converts Filipino internet slang and Jejemon text into standard, readable form. It addresses the challenge of processing non-standard Filipino text found on social media platforms, which poses difficulties for downstream NLP tasks such as sentiment analysis, content moderation, and machine translation.
+Jejemon text commonly uses:
 
-Jejemon is a writing style popularized in Filipino internet culture characterized by:
-- Alternating letter cases (`hElLo pO`)
-- Leet-speak substitutions (`h3y`, `s4yo`, `g0rl`)
-- Phonetic abbreviations (`kht` = kahit, `dhil` = dahil)
-- Repeated or extra characters (`sobrrraaa`, `plssss`)
-- Mixed Filipino-English code-switching
+- Alternating letter cases, such as `hElLo pO`
+- Leet-speak substitutions, such as `h3y`, `s4yo`, `g0rl`
+- Phonetic abbreviations, such as `kht` for `kahit`
+- Repeated or extra characters, such as `sobrrraaa`
+- Filipino-English code-switching
 
----
+This project does not depend on an external Jejemon database. Instead, it uses a manually curated rule-based lexicon inside the backend. That is acceptable for this project scope, but it also means new or unseen Jejemon variants may need to be added manually.
 
 ## Features
 
-- **Rule-based normalization** — regex patterns handle structural Jejemon features
-- **Dictionary lookup** — 250+ curated Filipino slang and Jejemon word mappings
-- **Leet-speak conversion** — character substitution decoding (`0→o`, `3→e`, `4→a`)
-- **Fuzzy matching** — edit-distance correction for unknown words not in the dictionary
-- **Sentiment detection** — classifies text as positive, negative, or neutral with confidence score and negation handling
-- **Word-level diff** — highlights exactly which words were changed during normalization
-- **REST API** — FastAPI backend with `/normalize` and `/evaluate` endpoints
-- **Interactive frontend** — side-by-side web UI with sample Jejemon texts
-
----
+- Rule-based normalization for common Filipino internet slang and Jejemon forms
+- Curated normalization lexicon with 120 current mappings
+- Leet-speak conversion, such as `0 -> o`, `3 -> e`, `4 -> a`
+- Fuzzy matching for unknown words using edit-distance matching
+- Sentiment detection using TF-IDF and Naive Bayes
+- Word-level diff for changed words
+- FastAPI REST API with `/normalize` and `/evaluate` endpoints
+- Browser-based frontend in plain HTML, CSS, and JavaScript
 
 ## Project Structure
 
-```
+```text
 JejeNorm/
-├── backend/
-│   ├── jejenorm.py       # Core NLP normalization engine
-│   ├── main.py           # FastAPI REST API
-│   └── requirements.txt  # Python dependencies
-├── frontend/
-│   └── jejenorm.html     # Web interface
-└── README.md
+  backend/
+    Dockerfile
+    jejenorm.py
+    main.py
+    requirements.txt
+    sentiment_model.pkl
+  frontend/
+    index.html
+  deployment/
+    huggingface/
+      Dockerfile
+      README.md
+      jejenorm.py
+      main.py
+      requirements.txt
+      sentiment_model.pkl
+  tests/
+    test_normalization.py
+  README.md
 ```
 
----
+`backend/` is the primary source of truth for development. `deployment/huggingface/` is a deployment copy for Hugging Face Spaces. When backend code changes, copy the updated backend files into `deployment/huggingface/` before redeploying.
 
 ## Tech Stack
 
-| Layer      | Technology                        |
-|------------|-----------------------------------|
-| Language   | Python 3.10+                      |
-| Backend    | FastAPI, Uvicorn                  |
-| NLP        | regex, difflib (edit distance)    |
-| Frontend   | HTML, CSS, Vanilla JavaScript     |
-| API Format | REST / JSON                       |
-
----
+| Layer | Technology |
+|---|---|
+| Backend | FastAPI, Uvicorn |
+| NLP | regex, difflib, spaCy |
+| ML | scikit-learn, pandas |
+| Frontend | HTML, CSS, Vanilla JavaScript |
+| API Format | REST / JSON |
 
 ## Installation
 
 ### Prerequisites
+
 - Python 3.10 or higher
 - pip
 
-### Steps
+### Setup
 
-**1. Clone the repository**
-```bash
-git clone https://github.com/your-username/jejenorm.git
-cd jejenorm
-```
-
-**2. Create and activate a virtual environment**
 ```bash
 python -m venv .venv
-
-# Windows
 .venv\Scripts\activate
-
-# macOS / Linux
-source .venv/bin/activate
+pip install -r backend/requirements.txt
+python -m spacy download en_core_web_sm
 ```
 
-**3. Install dependencies**
-```bash
-pip install fastapi uvicorn
-```
+### Run the Backend
 
-**4. Run the backend**
 ```bash
 cd backend
 uvicorn main:app --reload
 ```
 
-The API will be available at `http://127.0.0.1:8000`
+The local API runs at:
 
-**5. Open the frontend**
+```text
+http://127.0.0.1:8000
+```
 
-Open `frontend/jejenorm.html` in your browser. Make sure the backend is running first.
+### Open the Frontend
 
----
+Open:
+
+```text
+frontend/index.html
+```
+
+The frontend currently uses the deployed API configured in `frontend/index.html`:
+
+```js
+const API = 'https://anjelow-jejenorm.hf.space';
+```
+
+For local testing, temporarily change it to:
+
+```js
+const API = 'http://127.0.0.1:8000';
+```
 
 ## API Reference
 
 ### `POST /normalize`
 
-Normalizes a Jejemon or slang input text.
+Request:
 
-**Request body:**
 ```json
 {
-  "text": "H3y u!!! kamuzta nA? mIsS nA kTa sObRa!!!"
+  "text": "g4L1T 4K0 s4 iNyO!!! pWeD3 xA kAyA hNdI kA pUmUNtA dIt??"
 }
 ```
 
-**Response:**
+Response excerpt:
+
 ```json
 {
-  "original": "H3y u!!! kamuzta nA? mIsS nA kTa sObRa!!!",
-  "normalized": "hey you! kamusta na? miss na kita sobra!",
-  "sentiment": "positive",
-  "sentiment_confidence": 0.75,
-  "original_length": 7,
-  "normalized_length": 8,
-  "normalization_rate": 0.57,
-  "words_changed": 4,
-  "diff": [
-    { "original": "h3y", "normalized": "hey", "changed": true },
-    { "original": "u!!!", "normalized": "you!", "changed": true }
-  ]
+  "normalized": "galit ako sa inyo! pwede siya kaya hindi ka pumunta dito?",
+  "sentiment": "neutral",
+  "sentiment_method": "Naive Bayes + TF-IDF"
 }
 ```
-
----
 
 ### `POST /evaluate`
 
-Evaluates normalization accuracy against a gold-standard reference.
+Request:
 
-**Request body:**
 ```json
 {
   "text": "H3y u!!! kamuzta nA?",
@@ -145,101 +146,82 @@ Evaluates normalization accuracy against a gold-standard reference.
 }
 ```
 
-**Response:**
+Response excerpt:
+
 ```json
 {
-  "original": "H3y u!!! kamuzta nA?",
   "normalized": "hey you! kamusta na?",
-  "reference":  "hey you! kamusta na?",
   "word_accuracy": 1.0
 }
 ```
 
----
-
 ### `GET /`
-Health check — returns API status.
 
----
+Health check endpoint.
 
 ## Normalization Pipeline
 
-Input text passes through the following stages in order:
-
-```
+```text
 1. Lowercase
-        ↓
-2. Collapse punctuation runs   (!!!!! → !)
-        ↓
-3. Deduplicate characters      (sobrrraaa → sobraa)
-        ↓
-4. Dictionary lookup           (h3y → hey, 4ever → forever, sch00l → school)
-        ↓
-5. Leet-speak conversion       (0→o, 1→i, 3→e, 4→a, 5→s, 7→t, @→a)
-        ↓
-6. Fuzzy matching              (edit distance for unknown words)
-        ↓
-7. Whitespace cleanup
+2. Collapse repeated punctuation
+3. Deduplicate repeated characters
+4. Apply curated dictionary rules
+5. Apply leet-speak conversion
+6. Apply fuzzy correction
+7. Clean whitespace
 ```
 
-> **Important:** Dictionary lookup runs *before* leet-speak conversion so that entries like `h3y` or `4ever` are matched as whole units before their characters are individually decoded.
-
----
-
-## Evaluation Metrics
-
-| Metric | Description |
-|---|---|
-| Word Accuracy | % of output words that match the gold-standard reference |
-| Normalization Rate | % of input words changed during normalization |
-| Sentiment Confidence | Ratio of dominant sentiment words to total sentiment words detected |
-
----
+Dictionary lookup runs before leet-speak conversion so entries like `h3y` and `4ever` can be matched as whole words before their characters are decoded.
 
 ## Sample Input / Output
 
-| Input (Jejemon) | Output (Normalized) |
+| Input | Output |
 |---|---|
 | `H3y u!!!` | `hey you!` |
 | `kamuzta nA?` | `kamusta na?` |
 | `lOvE u 4eVeR` | `love you forever` |
 | `g4L1T 4K0 s4 iNyO` | `galit ako sa inyo` |
+| `pWeD3 xA kAyA` | `pwede siya kaya` |
 | `kHt aNoNg mNgYrI` | `kahit anong mangyari` |
 | `S0rY i c@nt taLk` | `sorry i can't talk` |
-| `pls rply nMn` | `please reply naman` |
 
----
+## Testing
+
+Run the normalization tests from the project root:
+
+```bash
+.venv\Scripts\python.exe -m unittest discover -s tests
+```
+
+## Reliability Notes
+
+The normalization lexicon is manually curated, so it is reliable for covered forms but not complete for every possible Jejemon spelling. This is the correct tradeoff for a rule-based academic prototype because there is no single standard public Jejemon database that fully covers the project scope.
+
+For presentation or defense, describe it this way:
+
+```text
+We did not use an existing Jejemon database because there is no reliable standard dataset for our exact scope. Instead, we created a manually curated normalization lexicon and combined it with leet-speak decoding and fuzzy matching.
+```
 
 ## Limitations
 
-- Dictionary coverage is limited to manually curated entries; novel Jejemon coinages may not be recognized
-- Fuzzy matching may occasionally produce incorrect corrections for very short or ambiguous tokens
-- Sentiment detection is lexicon-based and does not model context beyond immediate negation
-- Code-switched sentences (Taglish) may produce mixed-language output
-
----
+- New Jejemon variants may need manual rule additions
+- Fuzzy matching can miscorrect short or ambiguous tokens
+- Sentiment classification is trained on a small local dataset
+- Code-switched Taglish can produce mixed-language normalized output
 
 ## Future Work
 
-- Expand the dataset with crowd-sourced Jejemon–standard parallel pairs
-- Fine-tune a sequence-to-sequence model (e.g., mBERT or RoBERTa-Tagalog) on the parallel corpus
-- Implement BLEU score evaluation for more robust benchmarking
-- Add part-of-speech tagging for better context-aware normalization
-
----
+- Move normalization rules from Python into `backend/data/normalization_rules.json` or `.csv`
+- Expand the lexicon using crowd-sourced Jejemon-standard pairs
+- Add a larger gold-standard evaluation set
+- Add BLEU or character-level edit distance metrics
+- Improve sentiment modeling with a larger Filipino/Taglish dataset
 
 ## Authors
 
 - Jullian Anjelo Vidal
 - Diether Manansala
-
----
-
-## Acknowledgements
-
-This project was developed as a course requirement for [Course Name] under [Professor's Name], [School Name].
-
----
 
 ## License
 
