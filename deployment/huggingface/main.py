@@ -15,7 +15,7 @@ import pandas as pd
 
 app = FastAPI(title="JejeNorm API", version="3.0")
 
-# Allow frontend to access backend
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
