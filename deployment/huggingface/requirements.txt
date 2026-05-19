@@ -4,3 +4,4 @@ pydantic
 spacy
 pandas
 scikit-learn
+gradio

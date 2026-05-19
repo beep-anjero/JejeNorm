@@ -1,9 +1,14 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from jejenorm import (
-    normalize_text, detect_sentiment, load_dataset,
-    word_accuracy, normalization_rate,
-    spacy_pipeline, nlp_pipeline, _model_data
+    normalize_text,
+    detect_sentiment,
+    load_dataset,
+    word_accuracy,
+    normalization_rate,
+    spacy_pipeline,
+    nlp_pipeline,
+    _model_data,
 )
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
@@ -51,20 +56,20 @@ def normalize(input: TextInput):
     # Step 3 & 4: ML sentiment classification (TF-IDF + Naive Bayes)
     sentiment, confidence = detect_sentiment(input.text)
 
-    changed_words = [d for d in diff if d['changed']]
+    changed_words = [d for d in diff if d["changed"]]
 
     return {
-        "original":               input.text,
-        "normalized":             normalized,
-        "spacy_processed":        spacy_processed,
-        "sentiment":              sentiment,
-        "sentiment_confidence":   confidence,
-        "sentiment_method":       "Naive Bayes + TF-IDF",
-        "original_length":        len(input.text.split()),
-        "normalized_length":      len(normalized.split()),
-        "normalization_rate":     normalization_rate(input.text, normalized),
-        "words_changed":          len(changed_words),
-        "diff":                   diff,
+        "original": input.text,
+        "normalized": normalized,
+        "spacy_processed": spacy_processed,
+        "sentiment": sentiment,
+        "sentiment_confidence": confidence,
+        "sentiment_method": "Naive Bayes + TF-IDF",
+        "original_length": len(input.text.split()),
+        "normalized_length": len(normalized.split()),
+        "normalization_rate": normalization_rate(input.text, normalized),
+        "words_changed": len(changed_words),
+        "diff": diff,
     }
 
 
@@ -77,9 +82,9 @@ def evaluate(input: EvalInput):
     accuracy = word_accuracy(normalized, input.reference)
 
     return {
-        "original":      input.text,
-        "normalized":    normalized,
-        "reference":     input.reference,
+        "original": input.text,
+        "normalized": normalized,
+        "reference": input.reference,
         "word_accuracy": accuracy,
     }
 
@@ -102,15 +107,60 @@ def model_info():
             "7. Naive Bayes Classification (Scikit-learn)",
             "8. Logistic Regression Classification (Scikit-learn)",
         ],
-        "vectorizer":        "TfidfVectorizer",
-        "ngram_range":       "(1, 2)",
-        "vocabulary_size":   len(tv.get_feature_names_out()),
-        "models_trained":    ["MultinomialNB", "LogisticRegression"],
+        "vectorizer": "TfidfVectorizer",
+        "ngram_range": "(1, 2)",
+        "vocabulary_size": len(tv.get_feature_names_out()),
+        "models_trained": ["MultinomialNB", "LogisticRegression"],
         "sentiment_classes": ["positive", "negative", "neutral"],
-        "pickle_file":       "sentiment_model.pkl",
+        "pickle_file": "sentiment_model.pkl",
     }
 
 
 @app.get("/")
 def root():
     return {"message": "JejeNorm API v3.0 is running!"}
+
+
+# ==============================================================
+# GRADIO UI FOR LIVE DEMONSTRATION
+# ==============================================================
+import gradio as gr
+
+
+def gradio_interface(text):
+    # Process text using the same functions as the API
+    normalized, diff = normalize_text(text, ngram_rules)
+    sentiment, confidence = detect_sentiment(text)
+
+    # Format the diff to show what changed
+    changes = []
+    for d in diff:
+        if d["changed"]:
+            changes.append(f"'{d['original']}' ➔ '{d['normalized']}'")
+
+    changes_str = "\n".join(changes) if changes else "No slang detected."
+    confidence_pct = round(confidence * 100, 2)
+
+    return normalized, f"{sentiment} ({confidence_pct}%)", changes_str
+
+
+demo = gr.Interface(
+    fn=gradio_interface,
+    inputs=gr.Textbox(
+        lines=4,
+        placeholder="Type your Jejemon or slang text here... (e.g., g4L1T 4K0 s4 iNyO!!!)",
+        label="Input Jejemon Text",
+    ),
+    outputs=[
+        gr.Textbox(label="Normalized Text (Standard)"),
+        gr.Textbox(label="Predicted Sentiment & Confidence"),
+        gr.Textbox(label="Words Changed Log"),
+    ],
+    title="JejeNorm: Filipino Text Normalization & Sentiment Analysis",
+    description="Live demonstration of our NLP pipeline. Enter informal internet text to see it normalized and classified.",
+    allow_flagging="never",
+)
+
+# Mount the Gradio app onto the existing FastAPI app
+# This means visiting '/' shows the UI, and '/docs' still gives the API test page!
+app = gr.mount_gradio_app(app, demo, path="/")

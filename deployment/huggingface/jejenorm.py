@@ -149,6 +149,7 @@ def _build_rules() -> Dict[str, str]:
         'sch00l':   'school',
         'rInGu':    'ring',
         'ringu':    'ring',
+        'lyfe':     'life',
 
         # ── Communication ─────────────────────────────────────────────────
         'replyan':  'reply',

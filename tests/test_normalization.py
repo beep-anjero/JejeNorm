@@ -30,6 +30,12 @@ class NormalizationTests(unittest.TestCase):
             "love you forever!",
         )
 
+    def test_lyfe_normalizes_to_life(self):
+        self.assert_normalizes_to(
+            "H3y g0rl frnD!! k0y4 nNG AkO s4 lyfe st4y C0Ol 4lWaYz P4L!!",
+            "hey girl friend! kaya ang ako sa life tayo cool always pa!",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
