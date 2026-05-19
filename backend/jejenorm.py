@@ -25,20 +25,19 @@ except OSError as exc:
     ) from exc
 
 
-
 # ─────────────────────────────────────────────
 #  LEET-SPEAK MAP  (applied AFTER dictionary)
 # ─────────────────────────────────────────────
 LEET_MAP: Dict[str, str] = {
-    '0': 'o',
-    '1': 'i',
-    '3': 'e',
-    '4': 'a',
-    '5': 's',
-    '7': 't',
-    '8': 'b',
-    '9': 'g',
-    '@': 'a',
+    "0": "o",
+    "1": "i",
+    "3": "e",
+    "4": "a",
+    "5": "s",
+    "7": "t",
+    "8": "b",
+    "9": "g",
+    "@": "a",
 }
 
 
@@ -53,156 +52,142 @@ def load_dataset() -> Dict[str, str]:
 
 def _build_rules() -> Dict[str, str]:
     return {
-
         # ── English internet abbreviations ────────────────────────────────
-        'u':        'you',
-        'ur':       'your',
-        'uv':       'you have',
-        'luv':      'love',
-        'luve':     'love',
-        'lv':       'love',
-        'q':        'ko',
-
+        "u": "you",
+        "ur": "your",
+        "uv": "you have",
+        "luv": "love",
+        "luve": "love",
+        "lv": "love",
+        "q": "ko",
         # ── Numbers used as words ─────────────────────────────────────────
-        '2':        'to',
-        '4':        'for',
-        '4ever':    'forever',
-        '4eva':     'forever',
-        '4evr':     'forever',
-        '4evernmore': 'forever and ever',
-
+        "2": "to",
+        "4": "for",
+        "4ever": "forever",
+        "4eva": "forever",
+        "4evr": "forever",
+        "4evernmore": "forever and ever",
         # ── Laughter & reactions ──────────────────────────────────────────
-        'aw':       'aww',
-        'yey':      'yay',
-        'woe':      'wow',
-
+        "aw": "aww",
+        "yey": "yay",
+        "woe": "wow",
         # ── Polite expressions ────────────────────────────────────────────
-        'pls':      'please',
-        'plz':      'please',
-        'ty':       'thank you',
-        'thnx':     'thanks',
-        'thx':      'thanks',
-        'sory':     'sorry',
-        'sorc':     'sorry',
-        'sori':     'sorry',
-
+        "pls": "please",
+        "plz": "please",
+        "ty": "thank you",
+        "thnx": "thanks",
+        "thx": "thanks",
+        "sory": "sorry",
+        "sorc": "sorry",
+        "sori": "sorry",
         # ── Agreement ────────────────────────────────────────────────────
-        'yeah':     'yes',
-        'yep':      'yes',
-        'yup':      'yes',
-        'nope':     'no',
-        'nah':      'no',
-        'kk':       'ok',
-        'okie':     'ok',
-        'okey':     'ok',
-        'okay':     'ok',
-        'okbye':    'ok bye',
-
+        "yeah": "yes",
+        "yep": "yes",
+        "yup": "yes",
+        "nope": "no",
+        "nah": "no",
+        "kk": "ok",
+        "okie": "ok",
+        "okey": "ok",
+        "okay": "ok",
+        "okbye": "ok bye",
         # ── Time / farewell abbreviations ────────────────────────────────
-        'l8r':      'mamaya',
-        'asap':     'bilisan',
-        'gbye':     'bye',
-        'g2g':      'kailangan umalis',
-        'gtg':      'kailangan umalis',
-        'brb':      'babalik kaagad',
-        'bbl':      'babalik mamaya',
-        'bbs':      'babalik agad',
-        'tyl':      'hanggang mamaya',
-        'ttyl':     'hanggang mamaya',
-        'gmorning': 'magandang umaga',
-        'gm':       'magandang umaga',
-        'gnight':   'magandang gabi',
-        'gn':       'magandang gabi',
-
+        "l8r": "mamaya",
+        "asap": "bilisan",
+        "gbye": "bye",
+        "g2g": "kailangan umalis",
+        "gtg": "kailangan umalis",
+        "brb": "babalik kaagad",
+        "bbl": "babalik mamaya",
+        "bbs": "babalik agad",
+        "tyl": "hanggang mamaya",
+        "ttyl": "hanggang mamaya",
+        "gmorning": "magandang umaga",
+        "gm": "magandang umaga",
+        "gnight": "magandang gabi",
+        "gn": "magandang gabi",
         # ── Filipino particles ────────────────────────────────────────────
-        'poe':      'po',
-        'nalang':   'na lang',
-        'nng':      'nang',
-
+        "poe": "po",
+        "nalang": "na lang",
+        "nng": "nang",
         # ── Jejemon spelling variants → standard Filipino ─────────────────
-        'dIt':      'dito',
-        'xa':       'siya',
-        'inyo':     'inyo',
-        'kta':      'kita',
-        'tyo':      'tayo',
-        'kht':      'kahit',
-        'pRo':      'pero',
-        'pro':      'pero',
-        'mngyri':   'mangyari',
-        'mngyare':  'mangyari',
-        'mangyare': 'mangyari',
-        'sayoh':    'sayo',
-        'dhil':     'dahil',
-        'dh2':      'dati',
-        'lng':      'lang',
-        'nmn':      'naman',
-        'ulet':     'ulit',
-
+        "dIt": "dito",
+        "xa": "siya",
+        "inyo": "inyo",
+        "kta": "kita",
+        "tyo": "tayo",
+        "kht": "kahit",
+        "pRo": "pero",
+        "pro": "pero",
+        "mngyri": "mangyari",
+        "mngyare": "mangyari",
+        "mangyare": "mangyari",
+        "sayoh": "sayo",
+        "dhil": "dahil",
+        "dh2": "dati",
+        "lng": "lang",
+        "nmn": "naman",
+        "ulet": "ulit",
         # ── Jejemon word variants ─────────────────────────────────────────
-        'frnD':     'friend',
-        'frnd':     'friend',
-        'g0rl':     'girl',
-        'gorl':     'girl',
-        'gurl':     'girl',
-        'hmw0rk':   'homework',
-        'hmwork':   'homework',
-        'sch00l':   'school',
-        'rInGu':    'ring',
-        'ringu':    'ring',
-
+        "frnD": "friend",
+        "frnd": "friend",
+        "g0rl": "girl",
+        "gorl": "girl",
+        "gurl": "girl",
+        "hmw0rk": "homework",
+        "hmwork": "homework",
+        "sch00l": "school",
+        "rInGu": "ring",
+        "ringu": "ring",
+        "lyfe": "life",
         # ── Communication ─────────────────────────────────────────────────
-        'replyan':  'reply',
-        'msg':      'message',
-        'kwentong': 'kwento',
-        'iikwen':   'kwento',
-
+        "replyan": "reply",
+        "msg": "message",
+        "kwentong": "kwento",
+        "iikwen": "kwento",
         # ── Abbreviations / contractions ──────────────────────────────────
-        'dnt':      "don't",
-        'dont':     "don't",
-        'cant':     "can't",
-        'wont':     "won't",
-        'hav':      'have',
-        'havnt':    "haven't",
-        'didnt':    "didn't",
-        'shouldve': 'should have',
-        'couldve':  'could have',
-        'wouldve':  'would have',
-        'wanna':    'want to',
-        'gonna':    'going to',
-        'gotta':    'got to',
-        'dunno':    "don't know",
-        'duno':     "don't know",
-        'idk':      "hindi ko alam",
-        'kno':      'alam',
-        'knw':      'alam',
-
+        "dnt": "don't",
+        "dont": "don't",
+        "cant": "can't",
+        "wont": "won't",
+        "hav": "have",
+        "havnt": "haven't",
+        "didnt": "didn't",
+        "shouldve": "should have",
+        "couldve": "could have",
+        "wouldve": "would have",
+        "wanna": "want to",
+        "gonna": "going to",
+        "gotta": "got to",
+        "dunno": "don't know",
+        "duno": "don't know",
+        "idk": "hindi ko alam",
+        "kno": "alam",
+        "knw": "alam",
         # ── Emotions / adjectives ─────────────────────────────────────────
-        'gr8':      'great',
-        'kl':       'cool',
-        'nics':     'nice',
-        'qute':     'cute',
-
+        "gr8": "great",
+        "kl": "cool",
+        "nics": "nice",
+        "qute": "cute",
         # ── Greetings ─────────────────────────────────────────────────────
-        'hii':      'hi',
-        'h3y':      'hey',
-        'eow':      'hello',
-        'ellow':    'hello',
-        'kamuzta':  'kamusta',
-        'kamustah': 'kamusta',
-
+        "hii": "hi",
+        "h3y": "hey",
+        "eow": "hello",
+        "ellow": "hello",
+        "kamuzta": "kamusta",
+        "kamustah": "kamusta",
         # ── Filipino question words (abbreviated) ─────────────────────────
-        'cnu':      'sino',
-        'sinu':     'sino',
-        'anong':    'ano',
-        'anung':    'ano',
-
+        "cnu": "sino",
+        "sinu": "sino",
+        "anong": "ano",
+        "anung": "ano",
         # ── Filipino slang / colloquial ───────────────────────────────────
-        'adyos':    'adios',
-        'hangga':   'hanggang',
-        'till':     'hanggang',
-        'til':      'hanggang',
-        'ulul':     'ulol',
-        'sa yo':    'sayo',
+        "adyos": "adios",
+        "hangga": "hanggang",
+        "till": "hanggang",
+        "til": "hanggang",
+        "ulul": "ulol",
+        "sa yo": "sayo",
     }
 
 
@@ -210,34 +195,157 @@ def _build_rules() -> Dict[str, str]:
 #  VOCABULARY for fuzzy matching
 # ─────────────────────────────────────────────
 STANDARD_VOCABULARY = {
-    'ako', 'ikaw', 'siya', 'kami', 'kayo', 'sila', 'tayo',
-    'ko', 'mo', 'niya', 'namin', 'ninyo', 'inyo', 'nila',
-    'ang', 'ng', 'sa', 'at', 'na', 'ay', 'pa', 'din', 'rin',
-    'hindi', 'oo', 'opo', 'po', 'ba', 'nga', 'lang', 'naman',
-    'sino', 'ano', 'saan', 'kailan', 'bakit', 'paano', 'kanino',
-    'ito', 'iyan', 'iyon', 'dito', 'diyan', 'doon',
-    'maganda', 'pangit', 'mabuti', 'masama', 'malaki', 'maliit',
-    'mahal', 'mura', 'bago', 'luma', 'mabilis', 'mabagal',
-    'kumain', 'matulog', 'maglaro', 'magsulat', 'magbasa',
-    'pamilya', 'kaibigan', 'guro', 'estudyante', 'bahay', 'paaralan',
-    'araw', 'gabi', 'umaga', 'tanghali', 'hapon',
-    'salamat', 'sorry', 'kamusta', 'mabuhay',
-    'sobra', 'talagang', 'talaga', 'kaya', 'kahit', 'dahil',
-    'pero', 'kasi', 'para', 'kung', 'habang', 'pagkatapos',
-    'sayo', 'kanila', 'namin', 'natin',
-    'buhay', 'puso', 'isip', 'mata', 'ngiti', 'luha',
-    'kwento', 'usap', 'tawag', 'sulat', 'sagot', 'tanong',
-    'ulit', 'lagi', 'minsan', 'palagi', 'dati', 'ngayon', 'mamaya',
-    'hanggang', 'mula', 'simula', 'wakas', 'huli',
-    'love', 'hate', 'happy', 'sad', 'angry', 'tired',
-    'friend', 'girl', 'boy', 'school', 'homework',
-    'please', 'thanks', 'sorry', 'hello', 'bye',
-    'ok', 'yes', 'no', 'maybe', 'same', 'cool', 'nice',
-    'again', 'always', 'never', 'really', 'very', 'too',
+    "ako",
+    "ikaw",
+    "siya",
+    "kami",
+    "kayo",
+    "sila",
+    "tayo",
+    "ko",
+    "mo",
+    "niya",
+    "namin",
+    "ninyo",
+    "inyo",
+    "nila",
+    "ang",
+    "ng",
+    "sa",
+    "at",
+    "na",
+    "ay",
+    "pa",
+    "din",
+    "rin",
+    "hindi",
+    "oo",
+    "opo",
+    "po",
+    "ba",
+    "nga",
+    "lang",
+    "naman",
+    "sino",
+    "ano",
+    "saan",
+    "kailan",
+    "bakit",
+    "paano",
+    "kanino",
+    "ito",
+    "iyan",
+    "iyon",
+    "dito",
+    "diyan",
+    "doon",
+    "maganda",
+    "pangit",
+    "mabuti",
+    "masama",
+    "malaki",
+    "maliit",
+    "mahal",
+    "mura",
+    "bago",
+    "luma",
+    "mabilis",
+    "mabagal",
+    "kumain",
+    "matulog",
+    "maglaro",
+    "magsulat",
+    "magbasa",
+    "pamilya",
+    "kaibigan",
+    "guro",
+    "estudyante",
+    "bahay",
+    "paaralan",
+    "araw",
+    "gabi",
+    "umaga",
+    "tanghali",
+    "hapon",
+    "salamat",
+    "sorry",
+    "kamusta",
+    "mabuhay",
+    "sobra",
+    "talagang",
+    "talaga",
+    "kaya",
+    "kahit",
+    "dahil",
+    "pero",
+    "kasi",
+    "para",
+    "kung",
+    "habang",
+    "pagkatapos",
+    "sayo",
+    "kanila",
+    "namin",
+    "natin",
+    "buhay",
+    "puso",
+    "isip",
+    "mata",
+    "ngiti",
+    "luha",
+    "kwento",
+    "usap",
+    "tawag",
+    "sulat",
+    "sagot",
+    "tanong",
+    "ulit",
+    "lagi",
+    "minsan",
+    "palagi",
+    "dati",
+    "ngayon",
+    "mamaya",
+    "hanggang",
+    "mula",
+    "simula",
+    "wakas",
+    "huli",
+    "love",
+    "hate",
+    "happy",
+    "sad",
+    "angry",
+    "tired",
+    "friend",
+    "girl",
+    "boy",
+    "school",
+    "homework",
+    "please",
+    "thanks",
+    "sorry",
+    "hello",
+    "bye",
+    "ok",
+    "yes",
+    "no",
+    "maybe",
+    "same",
+    "cool",
+    "nice",
+    "again",
+    "always",
+    "never",
+    "really",
+    "very",
+    "too",
 }
 
 
-def _fuzzy_correct_word(word: str, vocabulary: set = STANDARD_VOCABULARY, cutoff: float = 0.75) -> str:
+def _fuzzy_correct_word(
+    word: str, vocabulary: set = STANDARD_VOCABULARY, cutoff: float = 0.75
+) -> str:
     """Use edit-distance (difflib) to find the closest standard word."""
     if len(word) < 3:
         return word
@@ -254,44 +362,45 @@ def _apply_leet(text: str) -> str:
 
 def _deduplicate_chars(text: str) -> str:
     """Collapse 3+ repeated characters to 2."""
-    return re.sub(r'(.)\1{2,}', r'\1\1', text)
+    return re.sub(r"(.)\1{2,}", r"\1\1", text)
 
 
 # ─────────────────────────────────────────────
 #  SPACY NLP PIPELINE
 # ─────────────────────────────────────────────
 
+
 def spacy_pipeline(text: str) -> str:
     doc = nlp(text)
     tokens = [
         token.lemma_
         for token in doc
-        if not token.is_stop and token.pos_ in ['NOUN', 'PROPN', 'VERB', 'ADJ']
+        if not token.is_stop and token.pos_ in ["NOUN", "PROPN", "VERB", "ADJ"]
     ]
-    return ' '.join(tokens)
+    return " ".join(tokens)
 
 
 def lower_replace(series: pd.Series) -> pd.Series:
     output = series.str.lower()
-    output = output.str.replace(r'\[.*?\]', '', regex=True)
-    output = output.str.replace(r'[^\w\s]', '', regex=True)
+    output = output.str.replace(r"\[.*?\]", "", regex=True)
+    output = output.str.replace(r"[^\w\s]", "", regex=True)
     return output
 
 
 def token_lemma_nonstop(text: str) -> str:
     doc = nlp(text)
     output = [token.lemma_ for token in doc if not token.is_stop]
-    return ' '.join(output)
+    return " ".join(output)
 
 
-def filter_pos(text: str, pos_list: list = ['NOUN', 'PROPN']) -> str:
+def filter_pos(text: str, pos_list: list = ["NOUN", "PROPN"]) -> str:
     doc = nlp(text)
     output = [token.text for token in doc if token.pos_ in pos_list]
-    return ' '.join(output)
+    return " ".join(output)
 
 
 def nlp_pipeline(series: pd.Series) -> pd.Series:
-   
+
     output = lower_replace(series)
     output = output.apply(token_lemma_nonstop)
     output = output.apply(filter_pos)
@@ -447,7 +556,6 @@ LABELED_DATA = [
     ("so happy and thankful for everything", "positive"),
     ("ang daming pagmamahal na natatanggap ko", "positive"),
     ("you are such a blessing in my life", "positive"),
-
     # ── NEGATIVE (150) ───────────────────────────────────────────────────────
     ("galit na ako sa kanya", "negative"),
     ("ang pangit naman nito", "negative"),
@@ -586,7 +694,6 @@ LABELED_DATA = [
     ("feeling completely broken and defeated today", "negative"),
     ("so sad that everything fell apart again", "negative"),
     ("i hate this feeling so much right now", "negative"),
-
     # ── NEUTRAL (150) ────────────────────────────────────────────────────────
     ("kumain na ako kanina", "neutral"),
     ("pupunta ako bukas sa school", "neutral"),
@@ -738,7 +845,6 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PICKLE_PATH = os.path.join(BASE_DIR, "sentiment_model.pkl")
 
 
-
 def build_and_train_classifier():
     """
     Build and train Naive Bayes and Logistic Regression classifiers
@@ -747,7 +853,7 @@ def build_and_train_classifier():
     """
     print("Building sentiment classifier...")
 
-    # Create DataFrame from labeled data 
+    # Create DataFrame from labeled data
     df = pd.DataFrame(LABELED_DATA, columns=["text", "sentiment"])
 
     # Apply NLP pipeline: lowercase + clean
@@ -759,10 +865,10 @@ def build_and_train_classifier():
     X = tv.fit_transform(df["text_clean"])
     y = df["sentiment"]
 
-    # View features as DataFrame 
+    # View features as DataFrame
     X_df = pd.DataFrame(X.toarray(), columns=tv.get_feature_names_out())
 
-    # Train/test split 
+    # Train/test split
     X_train, X_test, y_train, y_test = train_test_split(
         X_df, y, test_size=0.2, random_state=42
     )
@@ -772,12 +878,12 @@ def build_and_train_classifier():
     model_nb.fit(X_train, y_train)
     y_pred_nb = model_nb.predict(X_test)
 
-    # Logistic Regression model 
+    # Logistic Regression model
     model_lr = LogisticRegression(max_iter=1000)
     model_lr.fit(X_train, y_train)
     y_pred_lr = model_lr.predict(X_test)
 
-    # Print evaluation reports 
+    # Print evaluation reports
     print("\n=== Naive Bayes Results ===")
     print(classification_report(y_test, y_pred_nb))
     print(f"Accuracy: {accuracy_score(y_test, y_pred_nb):.4f}")
@@ -826,10 +932,10 @@ def detect_sentiment_ml(text: str) -> Tuple[str, float]:
 
     # Apply same preprocessing as training
     clean = text.lower()
-    clean = re.sub(r'\[.*?\]', '', clean)
-    clean = re.sub(r'[^\w\s]', '', clean)
+    clean = re.sub(r"\[.*?\]", "", clean)
+    clean = re.sub(r"[^\w\s]", "", clean)
     doc = nlp(clean)
-    clean = ' '.join([token.lemma_ for token in doc if not token.is_stop])
+    clean = " ".join([token.lemma_ for token in doc if not token.is_stop])
 
     # Vectorize and predict
     X = tv.transform([clean])
@@ -843,6 +949,7 @@ def detect_sentiment_ml(text: str) -> Tuple[str, float]:
 # ─────────────────────────────────────────────
 #  JEJEMON NORMALIZATION PIPELINE
 # ─────────────────────────────────────────────
+
 
 def normalize_text(
     text: str,
@@ -869,12 +976,12 @@ def normalize_text(
         ngram_rules = load_dataset()
 
     normalized = text.lower()
-    normalized = re.sub(r'([!?.,])\1+', r'\1', normalized)
+    normalized = re.sub(r"([!?.,])\1+", r"\1", normalized)
     normalized = _deduplicate_chars(normalized)
 
     sorted_rules = sorted(ngram_rules.items(), key=lambda x: len(x[0]), reverse=True)
     for slang_word, standard_word in sorted_rules:
-        pattern = r'(?<!\w)' + re.escape(slang_word.lower()) + r'(?!\w)'
+        pattern = r"(?<!\w)" + re.escape(slang_word.lower()) + r"(?!\w)"
         normalized = re.sub(pattern, standard_word, normalized, flags=re.IGNORECASE)
 
     normalized = _apply_leet(normalized)
@@ -884,22 +991,26 @@ def normalize_text(
         corrected_tokens = []
         for token in tokens:
             stripped = token.strip(r"""!?.,;:'"()[]""")
-            suffix = token[len(stripped):]
+            suffix = token[len(stripped) :]
             prefix_len = len(token) - len(token.lstrip(r"""!?.,;:'"()[]"""))
             prefix = token[:prefix_len]
-            stripped = token[prefix_len:len(token)-len(suffix)] if suffix else token[prefix_len:]
+            stripped = (
+                token[prefix_len : len(token) - len(suffix)]
+                if suffix
+                else token[prefix_len:]
+            )
 
             if stripped and stripped not in STANDARD_VOCABULARY and stripped.isalpha():
                 corrected = _fuzzy_correct_word(stripped)
                 corrected_tokens.append(prefix + corrected + suffix)
             else:
                 corrected_tokens.append(token)
-        normalized = ' '.join(corrected_tokens)
+        normalized = " ".join(corrected_tokens)
 
-    normalized = re.sub(r'\s+', ' ', normalized).strip()
+    normalized = re.sub(r"\s+", " ", normalized).strip()
 
-    original_words = re.findall(r'\S+', text.lower())
-    normalized_words = re.findall(r'\S+', normalized)
+    original_words = re.findall(r"\S+", text.lower())
+    normalized_words = re.findall(r"\S+", normalized)
     diff = _build_diff(original_words, normalized_words)
 
     return normalized, diff
@@ -910,13 +1021,15 @@ def _build_diff(original_words: List[str], normalized_words: List[str]) -> List[
     diff = []
     max_len = max(len(original_words), len(normalized_words))
     for i in range(max_len):
-        orig = original_words[i] if i < len(original_words) else ''
-        norm = normalized_words[i] if i < len(normalized_words) else ''
-        diff.append({
-            'original': orig,
-            'normalized': norm,
-            'changed': orig != norm,
-        })
+        orig = original_words[i] if i < len(original_words) else ""
+        norm = normalized_words[i] if i < len(normalized_words) else ""
+        diff.append(
+            {
+                "original": orig,
+                "normalized": norm,
+                "changed": orig != norm,
+            }
+        )
     return diff
 
 
@@ -925,25 +1038,94 @@ def _build_diff(original_words: List[str], normalized_words: List[str]) -> List[
 # ─────────────────────────────────────────────
 
 POSITIVE_WORDS = {
-    'love', 'luv', 'mahal', 'amazing', 'awesome', 'great', 'wonderful',
-    'fantastic', 'excellent', 'good', 'happy', 'joy', 'beautiful', 'maganda',
-    'perfect', 'best', 'like', 'gusto', 'lol', 'haha', 'hihi', 'smile',
-    'laugh', 'fun', 'cool', 'nice', 'brilliant', 'superb', 'adore',
-    'gorgeous', 'lovely', 'delightful', 'terrific', 'stellar', 'saya',
-    'masaya', 'mabuti', 'salamat', 'ganda', 'cute', 'sweet',
+    "love",
+    "luv",
+    "mahal",
+    "amazing",
+    "awesome",
+    "great",
+    "wonderful",
+    "fantastic",
+    "excellent",
+    "good",
+    "happy",
+    "joy",
+    "beautiful",
+    "maganda",
+    "perfect",
+    "best",
+    "like",
+    "gusto",
+    "lol",
+    "haha",
+    "hihi",
+    "smile",
+    "laugh",
+    "fun",
+    "cool",
+    "nice",
+    "brilliant",
+    "superb",
+    "adore",
+    "gorgeous",
+    "lovely",
+    "delightful",
+    "terrific",
+    "stellar",
+    "saya",
+    "masaya",
+    "mabuti",
+    "salamat",
+    "ganda",
+    "cute",
+    "sweet",
 }
 
 NEGATIVE_WORDS = {
-    'hate', 'horrible', 'terrible', 'awful', 'bad', 'sad', 'angry',
-    'upset', 'disappointed', 'disgusted', 'ugly', 'pangit', 'worst',
-    'sucks', 'stupid', 'dumb', 'annoying', 'pathetic', 'miserable',
-    'poor', 'fail', 'failed', 'sick', 'tired', 'exhausted', 'depressed',
-    'broken', 'wrong', 'toxic', 'useless', 'worthless', 'disgusting',
-    'galit', 'nakakainis', 'hayop', 'gago', 'bobo', 'tanga',
-    'h8', 'sux', 'h4te',
+    "hate",
+    "horrible",
+    "terrible",
+    "awful",
+    "bad",
+    "sad",
+    "angry",
+    "upset",
+    "disappointed",
+    "disgusted",
+    "ugly",
+    "pangit",
+    "worst",
+    "sucks",
+    "stupid",
+    "dumb",
+    "annoying",
+    "pathetic",
+    "miserable",
+    "poor",
+    "fail",
+    "failed",
+    "sick",
+    "tired",
+    "exhausted",
+    "depressed",
+    "broken",
+    "wrong",
+    "toxic",
+    "useless",
+    "worthless",
+    "disgusting",
+    "galit",
+    "nakakainis",
+    "hayop",
+    "gago",
+    "bobo",
+    "tanga",
+    "h8",
+    "sux",
+    "h4te",
 }
 
-NEGATION_WORDS = {'hindi', 'di', 'not', "don't", 'wala', 'ayaw', 'never'}
+NEGATION_WORDS = {"hindi", "di", "not", "don't", "wala", "ayaw", "never"}
 
 
 def detect_sentiment(text: str) -> Tuple[str, float]:
@@ -978,20 +1160,21 @@ def _detect_sentiment_rulebased(text: str) -> Tuple[str, float]:
 
     total = positive_score + negative_score
     if total == 0:
-        return 'neutral', 1.0
+        return "neutral", 1.0
 
     confidence = round(max(positive_score, negative_score) / total, 2)
     if positive_score > negative_score:
-        return 'positive', confidence
+        return "positive", confidence
     elif negative_score > positive_score:
-        return 'negative', confidence
+        return "negative", confidence
     else:
-        return 'neutral', 0.5
+        return "neutral", 0.5
 
 
 # ─────────────────────────────────────────────
 #  EVALUATION UTILITIES
 # ─────────────────────────────────────────────
+
 
 def word_accuracy(predicted: str, reference: str) -> float:
     """Compute word-level accuracy between predicted and reference strings."""
@@ -1001,7 +1184,8 @@ def word_accuracy(predicted: str, reference: str) -> float:
         return 1.0
     length = max(len(pred_words), len(ref_words))
     matches = sum(
-        1 for i in range(min(len(pred_words), len(ref_words)))
+        1
+        for i in range(min(len(pred_words), len(ref_words)))
         if pred_words[i] == ref_words[i]
     )
     return round(matches / length, 4)
@@ -1014,7 +1198,8 @@ def normalization_rate(original: str, normalized: str) -> float:
     if not orig_words:
         return 0.0
     changed = sum(
-        1 for i in range(min(len(orig_words), len(norm_words)))
+        1
+        for i in range(min(len(orig_words), len(norm_words)))
         if orig_words[i] != norm_words[i]
     )
     return round(changed / len(orig_words), 4)
